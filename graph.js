@@ -94,7 +94,7 @@ class Graph {
 
         const title = document.createElement("div");
         title.className = "monthly-graph__title";
-        title.textContent = "Weekly";
+        title.textContent = "Monthly";
 
         const legend = document.createElement("div");
         legend.className = "monthly-graph__legend";
