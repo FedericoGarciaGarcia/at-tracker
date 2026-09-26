@@ -1,9 +1,22 @@
 class Controls {
-    constructor(container, { onAddEntry } = {}) {
+    constructor(container, { onAddEntry, onExport, onImport } = {}) {
         this.container = container;
         this.onAddEntry = onAddEntry;
+        this.onExport = onExport;
+        this.onImport = onImport;
         this.selectedType = "A";
+        this.settingsOpen = false;
         this.render();
+    }
+
+    toggleSettings(force) {
+        this.settingsOpen =
+            typeof force === "boolean" ? force : !this.settingsOpen;
+        this.settingsMenu.hidden = !this.settingsOpen;
+        this.settingsButton.setAttribute(
+            "aria-expanded",
+            String(this.settingsOpen)
+        );
     }
 
     formatLocalDateTime(date) {
@@ -75,16 +88,15 @@ class Controls {
         addButton.setAttribute("aria-label", "Add entry");
         addButton.addEventListener("click", () => this.openModal());
 
-        const exportButton = document.createElement("button");
-        exportButton.className = "controls__button";
-        exportButton.type = "button";
-        exportButton.textContent = "Export JSON";
-        exportButton.setAttribute("aria-label", "Export to JSON");
+        const settings = document.createElement("div");
+        settings.className = "controls__settings";
 
         const settingsButton = document.createElement("button");
         settingsButton.className = "controls__button controls__button--icon";
         settingsButton.type = "button";
         settingsButton.setAttribute("aria-label", "Settings");
+        settingsButton.setAttribute("aria-haspopup", "menu");
+        settingsButton.setAttribute("aria-expanded", "false");
         settingsButton.innerHTML = `
             <svg class="controls__icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path
@@ -102,10 +114,61 @@ class Controls {
                 />
             </svg>
         `;
+        settingsButton.addEventListener("click", (event) => {
+            event.stopPropagation();
+            this.toggleSettings();
+        });
+
+        const settingsMenu = document.createElement("div");
+        settingsMenu.className = "controls__menu";
+        settingsMenu.hidden = true;
+        settingsMenu.setAttribute("role", "menu");
+
+        const exportButton = document.createElement("button");
+        exportButton.className = "controls__menu-item";
+        exportButton.type = "button";
+        exportButton.setAttribute("role", "menuitem");
+        exportButton.textContent = "Export JSON";
+        exportButton.addEventListener("click", () => {
+            this.toggleSettings(false);
+            this.onExport?.();
+        });
+
+        const importButton = document.createElement("button");
+        importButton.className = "controls__menu-item";
+        importButton.type = "button";
+        importButton.setAttribute("role", "menuitem");
+        importButton.textContent = "Import JSON";
+        importButton.addEventListener("click", () => {
+            this.toggleSettings(false);
+            this.onImport?.();
+        });
+
+        settingsMenu.appendChild(exportButton);
+        settingsMenu.appendChild(importButton);
+        settings.appendChild(settingsButton);
+        settings.appendChild(settingsMenu);
+
+        this.settingsButton = settingsButton;
+        this.settingsMenu = settingsMenu;
+
+        document.addEventListener("click", (event) => {
+            if (!this.settingsOpen) {
+                return;
+            }
+            if (!settings.contains(event.target)) {
+                this.toggleSettings(false);
+            }
+        });
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && this.settingsOpen) {
+                this.toggleSettings(false);
+            }
+        });
 
         toolbar.appendChild(addButton);
-        toolbar.appendChild(exportButton);
-        toolbar.appendChild(settingsButton);
+        toolbar.appendChild(settings);
         this.container.appendChild(toolbar);
         this.container.appendChild(this.createModal());
     }

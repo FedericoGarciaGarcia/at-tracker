@@ -1,11 +1,9 @@
-class Graph {
+class Calendar {
     constructor(container) {
         this.container = container;
         this.data = (JSON.parse(localStorage.getItem('entries')) ?? []).map(
             (entry) => (entry.Type === "B" ? { ...entry, Type: "T" } : entry)
         );
-        console.log(this.data);
-
         const now = new Date();
         this.viewYear = now.getFullYear();
         this.viewMonth = now.getMonth();
@@ -23,6 +21,50 @@ class Graph {
     deleteEntry(index) {
         this.data.splice(index, 1);
         this.persistAndRender();
+    }
+
+    exportEntries() {
+        const blob = new Blob([JSON.stringify(this.data, null, 2)], {
+            type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "at-tracker-entries.json";
+        link.click();
+        URL.revokeObjectURL(url);
+    }
+
+    importEntries() {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "application/json,.json";
+        input.addEventListener("change", () => {
+            const file = input.files?.[0];
+            if (!file) {
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const parsed = JSON.parse(String(reader.result));
+                    if (!Array.isArray(parsed)) {
+                        throw new Error("Expected an array of entries");
+                    }
+
+                    this.data = parsed.map((entry) =>
+                        entry.Type === "B" ? { ...entry, Type: "T" } : entry
+                    );
+                    this.persistAndRender();
+                } catch (error) {
+                    alert("Could not import JSON. Please use a valid entries file.");
+                    console.error(error);
+                }
+            };
+            reader.readAsText(file);
+        });
+        input.click();
     }
 
     persistAndRender() {
@@ -224,28 +266,28 @@ class Graph {
         const weekCount = days.length / 7;
 
         const wrapper = document.createElement("div");
-        wrapper.className = "activity-graph";
+        wrapper.className = "activity-calendar";
         wrapper.style.setProperty("--week-count", weekCount);
 
         /*
          * Month header with navigation
          */
         const header = document.createElement("div");
-        header.className = "activity-graph__header";
+        header.className = "activity-calendar__header";
 
         const prevButton = document.createElement("button");
-        prevButton.className = "activity-graph__nav";
+        prevButton.className = "activity-calendar__nav";
         prevButton.type = "button";
         prevButton.textContent = "‹";
         prevButton.setAttribute("aria-label", "Previous month");
         prevButton.addEventListener("click", () => this.shiftMonth(-1));
 
         const monthLabel = document.createElement("div");
-        monthLabel.className = "activity-graph__month-label";
+        monthLabel.className = "activity-calendar__month-label";
         monthLabel.textContent = this.getMonthLabel();
 
         const nextButton = document.createElement("button");
-        nextButton.className = "activity-graph__nav";
+        nextButton.className = "activity-calendar__nav";
         nextButton.type = "button";
         nextButton.textContent = "›";
         nextButton.setAttribute("aria-label", "Next month");
@@ -261,13 +303,13 @@ class Graph {
          * Day-of-week labels (M T W T F S S)
          */
         const dayLabels = document.createElement("div");
-        dayLabels.className = "activity-graph__day-labels";
+        dayLabels.className = "activity-calendar__day-labels";
 
         const weekdays = ["M", "T", "W", "T", "F", "S", "S"];
 
         for (const weekday of weekdays) {
             const label = document.createElement("div");
-            label.className = "activity-graph__day-label";
+            label.className = "activity-calendar__day-label";
             label.textContent = weekday;
             dayLabels.appendChild(label);
         }
@@ -278,7 +320,7 @@ class Graph {
          * Weeks grid
          */
         const grid = document.createElement("div");
-        grid.className = "activity-graph__grid";
+        grid.className = "activity-calendar__grid";
 
         for (let week = 0; week < weekCount; week++) {
             for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
@@ -293,7 +335,7 @@ class Graph {
                     continue;
                 }
 
-                square.className = "activity-graph__day";
+                square.className = "activity-calendar__day";
                 square.textContent = day.getDate();
 
                 const types = this.dateTypes.get(
@@ -302,20 +344,20 @@ class Graph {
 
                 if (types?.has("A") && types?.has("T")) {
                     square.classList.add(
-                        "activity-graph__day--both"
+                        "activity-calendar__day--both"
                     );
                 } else if (types?.has("A")) {
                     square.classList.add(
-                        "activity-graph__day--a"
+                        "activity-calendar__day--a"
                     );
                 } else if (types?.has("T")) {
                     square.classList.add(
-                        "activity-graph__day--t"
+                        "activity-calendar__day--t"
                     );
                 }
 
                 if (types?.size) {
-                    square.classList.add("activity-graph__day--clickable");
+                    square.classList.add("activity-calendar__day--clickable");
                     square.setAttribute("role", "button");
                     square.tabIndex = 0;
                     square.setAttribute(

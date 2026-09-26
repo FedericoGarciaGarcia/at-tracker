@@ -9,12 +9,18 @@
 //   { Date: "2026-09-24T10:00:00Z", Type: "T" },
 // ];
 
-const graph = new Graph(
-  document.getElementById("graph"),
+const calendar = new Calendar(
+  document.getElementById("calendar"),
 );
 
 new Controls(document.getElementById("controls"), {
   onAddEntry: (entry) => {
-    graph.addEntry(entry);
+    calendar.addEntry(entry);
+  },
+  onExport: () => {
+    calendar.exportEntries();
+  },
+  onImport: () => {
+    calendar.importEntries();
   },
 });
