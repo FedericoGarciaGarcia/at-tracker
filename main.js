@@ -9,9 +9,13 @@
 //   { Date: "2026-09-24T10:00:00Z", Type: "T" },
 // ];
 
-const calendar = new Calendar(
-  document.getElementById("calendar"),
-);
+const graph = new Graph(document.getElementById("graph"));
+
+const calendar = new Calendar(document.getElementById("calendar"), {
+  onChange: (data) => {
+    graph.setData(data);
+  },
+});
 
 new Controls(document.getElementById("controls"), {
   onAddEntry: (entry) => {

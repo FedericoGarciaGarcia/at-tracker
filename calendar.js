@@ -1,6 +1,7 @@
 class Calendar {
-    constructor(container) {
+    constructor(container, { onChange } = {}) {
         this.container = container;
+        this.onChange = onChange;
         this.data = (JSON.parse(localStorage.getItem('entries')) ?? []).map(
             (entry) => (entry.Type === "B" ? { ...entry, Type: "T" } : entry)
         );
@@ -11,6 +12,7 @@ class Calendar {
         this.dateTypes = this.createDateTypes();
 
         this.render();
+        this.onChange?.(this.data);
     }
 
     addEntry(entry) {
@@ -71,6 +73,7 @@ class Calendar {
         this.dateTypes = this.createDateTypes();
         localStorage.setItem("entries", JSON.stringify(this.data));
         this.render();
+        this.onChange?.(this.data);
     }
 
     getEntriesForDate(date) {
