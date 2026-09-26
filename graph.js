@@ -7,8 +7,8 @@ class Graph {
         console.log(this.data);
 
         const now = new Date();
-        this.viewYear = now.getUTCFullYear();
-        this.viewMonth = now.getUTCMonth();
+        this.viewYear = now.getFullYear();
+        this.viewMonth = now.getMonth();
 
         this.dateTypes = this.createDateTypes();
 
@@ -56,7 +56,6 @@ class Graph {
             weekday: "short",
             month: "short",
             day: "numeric",
-            timeZone: "UTC",
         });
     }
 
@@ -178,20 +177,19 @@ class Graph {
 
     getDateKey(date) {
         return [
-            date.getUTCFullYear(),
-            String(date.getUTCMonth() + 1).padStart(2, "0"),
-            String(date.getUTCDate()).padStart(2, "0")
+            date.getFullYear(),
+            String(date.getMonth() + 1).padStart(2, "0"),
+            String(date.getDate()).padStart(2, "0")
         ].join("-");
     }
 
     getMonthLabel() {
-        const date = new Date(Date.UTC(this.viewYear, this.viewMonth, 1));
+        const date = new Date(this.viewYear, this.viewMonth, 1);
         const monthName = date.toLocaleString("en-US", {
             month: "long",
-            timeZone: "UTC"
         });
 
-        const currentYear = new Date().getUTCFullYear();
+        const currentYear = new Date().getFullYear();
 
         if (this.viewYear < currentYear) {
             return `${monthName} ${this.viewYear}`;
@@ -203,8 +201,8 @@ class Graph {
     isCurrentMonth() {
         const now = new Date();
         return (
-            this.viewYear === now.getUTCFullYear() &&
-            this.viewMonth === now.getUTCMonth()
+            this.viewYear === now.getFullYear() &&
+            this.viewMonth === now.getMonth()
         );
     }
 
@@ -213,9 +211,9 @@ class Graph {
             return;
         }
 
-        const date = new Date(Date.UTC(this.viewYear, this.viewMonth + delta, 1));
-        this.viewYear = date.getUTCFullYear();
-        this.viewMonth = date.getUTCMonth();
+        const date = new Date(this.viewYear, this.viewMonth + delta, 1);
+        this.viewYear = date.getFullYear();
+        this.viewMonth = date.getMonth();
         this.render();
     }
 
@@ -288,15 +286,15 @@ class Graph {
                 const square = document.createElement("div");
 
                 if (
-                    day.getUTCFullYear() !== this.viewYear ||
-                    day.getUTCMonth() !== this.viewMonth
+                    day.getFullYear() !== this.viewYear ||
+                    day.getMonth() !== this.viewMonth
                 ) {
                     grid.appendChild(square);
                     continue;
                 }
 
                 square.className = "activity-graph__day";
-                square.textContent = day.getUTCDate();
+                square.textContent = day.getDate();
 
                 const types = this.dateTypes.get(
                     this.getDateKey(day)
@@ -343,34 +341,23 @@ class Graph {
     }
 
     createDays() {
-        const firstDay = new Date(Date.UTC(
-            this.viewYear,
-            this.viewMonth,
-            1
-        ));
-
-        const lastDay = new Date(Date.UTC(
-            this.viewYear,
-            this.viewMonth + 1,
-            0
-        ));
+        const firstDay = new Date(this.viewYear, this.viewMonth, 1);
+        const lastDay = new Date(this.viewYear, this.viewMonth + 1, 0);
 
         // Start on Monday.
-        const firstWeekday = (firstDay.getUTCDay() + 6) % 7;
-        firstDay.setUTCDate(firstDay.getUTCDate() - firstWeekday);
+        const firstWeekday = (firstDay.getDay() + 6) % 7;
+        firstDay.setDate(firstDay.getDate() - firstWeekday);
 
         // End on Sunday.
-        const lastWeekday = (lastDay.getUTCDay() + 6) % 7;
-        lastDay.setUTCDate(
-            lastDay.getUTCDate() + (6 - lastWeekday)
-        );
+        const lastWeekday = (lastDay.getDay() + 6) % 7;
+        lastDay.setDate(lastDay.getDate() + (6 - lastWeekday));
 
         const days = [];
 
         for (
             let date = new Date(firstDay);
             date <= lastDay;
-            date.setUTCDate(date.getUTCDate() + 1)
+            date.setDate(date.getDate() + 1)
         ) {
             days.push(new Date(date));
         }
